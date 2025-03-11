@@ -21,16 +21,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 10,
-    borderWidth: 1,
     backgroundColor: "#D0DDD0",
-    borderColor: "#000000",
     alignItems: "center",
     alignSelf: "flex-start", 
     flexDirection: "row", 
   },
   text: {
     color: "#000000",
-    fontWeight: "bold",
   },
   icon: {
     width: 20, 
