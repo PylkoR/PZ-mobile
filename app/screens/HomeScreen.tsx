@@ -14,7 +14,7 @@ export default function HomeScreen() {
       <View style={styles.container}>
         <Text style={styles.text}>Zaloguj się używając konta USOS</Text>
         <View style={styles.buttonWrapper}>
-          <CustomButton icon={loginIcon} onPress={() => router.push("../drawer/inventory")}/>
+          <CustomButton icon={loginIcon} onPress={() => router.push("../files")}/>
         </View>
       </View>
     </ScreenWrapper>
