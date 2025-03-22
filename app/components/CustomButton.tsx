@@ -1,16 +1,17 @@
 import React from "react";
-import { Text, TouchableOpacity, StyleSheet, Image, ImageSourcePropType } from "react-native";
+import { Text, TouchableOpacity, StyleSheet } from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
 
-type CustomButtonProps = { //Przycisk albo ma label albo iokonę
+type CustomButtonProps = { //Przycisk albo ma label albo ikonę
   label?: string; 
   onPress?: () => void;
-  icon?: ImageSourcePropType; 
+  icon?: keyof typeof MaterialIcons.glyphMap; 
 };
 
 const CustomButton: React.FC<CustomButtonProps> = ({ label, onPress, icon }) => {
   return (
     <TouchableOpacity style={styles.button} onPress={onPress}>
-      {icon && <Image source={icon} style={styles.icon} />}
+      {icon && <MaterialIcons name={icon} size={40} color="black" />}
       {label && <Text style={styles.text}>{label}</Text>}
     </TouchableOpacity>
   );
@@ -25,15 +26,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     alignSelf: "flex-start", 
     flexDirection: "row", 
+    
   },
   text: {
     color: "#000000",
   },
-  icon: {
-    width: 20, 
-    height: 20, 
-    marginRight: 8,
-  },
+  
 });
 
 export default CustomButton;
