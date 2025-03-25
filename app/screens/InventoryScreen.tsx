@@ -15,7 +15,6 @@ export default function InventoryScreen() {
   
   return (
     <ScreenWrapper>
-      <CustomButton label={"Działam"} onPress={() => router.push("/")} />
       <DataTable data={data} />
     </ScreenWrapper>
   );
