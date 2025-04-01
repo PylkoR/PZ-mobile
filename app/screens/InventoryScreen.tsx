@@ -1,10 +1,10 @@
 import { StyleSheet } from "react-native";
 import ScreenWrapper from "./ScreenWrapper";
 import CustomButton from "../components/CustomButton";
-import DataTable from "../components/DataTable";
 import inventoryData from "../inventoryData.json";
-import { router } from "expo-router";
 import { useState, useEffect } from "react";
+import { router } from "expo-router";
+import TanStackTable from "../components/TanStackTable";
 
 export default function InventoryScreen() {
   const [data, setData] = useState<any[]>([]);
@@ -15,7 +15,7 @@ export default function InventoryScreen() {
   
   return (
     <ScreenWrapper>
-      <DataTable data={data} />
+      <TanStackTable data={data}/>
     </ScreenWrapper>
   );
 }
