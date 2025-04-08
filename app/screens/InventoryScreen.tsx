@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 import ScreenWrapper from "./ScreenWrapper";
 import CustomButton from "../components/CustomButton";
 import inventoryData from "../inventoryData.json";
@@ -15,16 +15,38 @@ export default function InventoryScreen() {
   
   return (
     <ScreenWrapper>
-      <TanStackTable data={data}/>
+      <View style={styles.container}>
+        <View style={styles.tableContainer}>
+            <TanStackTable data={data} />
+        </View>
+
+        <View style={styles.bottomButtonContainer}>
+            <CustomButton
+                icon="photo-camera" 
+                
+             />
+        </View>
+      </View>
     </ScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
+
+  container: {
+    flex: 1,
+  },
+  tableContainer: {
+    flex: 0.9, 
+  },
+
   bottomButtonContainer: {
     position: "absolute",
-    bottom: 50,
-    left: "45%",
+    bottom: 0,
+    left: "40%",
     alignItems: "center",
   },
+
+  
+
 });
