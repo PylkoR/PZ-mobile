@@ -1,12 +1,13 @@
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Drawer } from 'expo-router/drawer';
+import LoginScreen from '../login'; 
 
 export default function DrawerLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Drawer 
         screenOptions={{
-
+          
           drawerStyle: {
             backgroundColor: '#D0DDD0',
             width: 250,
@@ -16,12 +17,23 @@ export default function DrawerLayout() {
 
           drawerActiveTintColor: 'FFFFFF', 
 
+          headerShown: true,
+
           headerStyle: {
             backgroundColor: '#D0DDD0',
           },
 
+          
+          headerTitleAlign:"center",
+          
+
         }}
-      />
+      >
+      <Drawer.Screen name="inventory" options={{ drawerLabel: "Inwentaryzacja" , headerTitle:"Inwentaryzacja"}} />
+      <Drawer.Screen name="table" options={{ drawerLabel: "Tabela",headerTitle:"Tabela" }} />
+      
+
+      </Drawer>
       
     </GestureHandlerRootView>
   );
