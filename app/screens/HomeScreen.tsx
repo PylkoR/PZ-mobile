@@ -4,8 +4,6 @@ import CustomButton from "../components/CustomButton";
 import { useRouter } from "expo-router";
 import { View, StyleSheet } from "react-native";
 
-const loginIcon = require("../../assets/images/loginIcon.png");
-
 export default function HomeScreen() {
   const router = useRouter(); // testowy button do redirectu na strony z menu
 
@@ -14,7 +12,7 @@ export default function HomeScreen() {
       <View style={styles.container}>
         <Text style={styles.text}>Zaloguj się używając konta USOS</Text>
         <View style={styles.buttonWrapper}>
-          <CustomButton icon={loginIcon} onPress={() => router.push("../files")}/>
+          <CustomButton icon="login" onPress={() => router.push("../login")}/>
         </View>
       </View>
     </ScreenWrapper>
@@ -30,8 +28,8 @@ const styles = StyleSheet.create({
   buttonWrapper: {
     justifyContent: "center",
     alignItems: "center", // wyśrodkowanie guzika w poziomie
-    marginTop: 20, // opcjonalnie odstęp od tekstu
-    transform: [{ scale: 1.25 }],
+    marginTop: 15, // opcjonalnie odstęp od tekstu
+    transform: [{ scale: 1 }],
   },
   text: {
     width: "80%",

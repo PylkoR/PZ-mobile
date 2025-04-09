@@ -31,7 +31,11 @@ export default function DrawerLayout() {
       >
       <Drawer.Screen name="inventory" options={{ drawerLabel: "Inwentaryzacja" , headerTitle:"Inwentaryzacja"}} />
       <Drawer.Screen name="table" options={{ drawerLabel: "Tabela",headerTitle:"Tabela" }} />
-      
+      <Drawer.Screen name="files" options={{ 
+          drawerLabel: "Pliki", 
+          headerTitle: "Lista Plików",
+          headerShown: false,
+        }} />
 
       </Drawer>
       
