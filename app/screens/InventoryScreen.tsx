@@ -1,18 +1,35 @@
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, Alert } from "react-native";
 import ScreenWrapper from "./ScreenWrapper";
 import CustomButton from "../components/CustomButton";
 import inventoryData from "../inventoryData.json";
 import { useState, useEffect } from "react";
-import { router } from "expo-router";
+import { useLocalSearchParams, router, useFocusEffect } from "expo-router";
 import TanStackTable from "../components/TanStackTable";
 
 export default function InventoryScreen() {
   const [data, setData] = useState<any[]>([]);
+  const { scannedData } = useLocalSearchParams();
 
   useEffect(() => {
     setData(inventoryData);
   }, []);
   
+  useFocusEffect(() => {
+    if (scannedData) {
+      Alert.alert("Zeskanowano kod QR", `Dane: ${scannedData}`, [
+        {
+          text: "OK",
+          onPress: () => router.replace("../drawer/inventory"),
+        },
+        {
+          text: "Anuluj",
+          style: "cancel",
+          onPress: () => router.replace("../drawer/inventory"),
+        },
+      ]);
+    }
+  });
+
   return (
     <ScreenWrapper>
       <View style={styles.container}>
@@ -23,7 +40,7 @@ export default function InventoryScreen() {
         <View style={styles.bottomButtonContainer}>
             <CustomButton
                 icon="photo-camera" 
-                
+                onPress={() => router.push("../scanner")}
              />
         </View>
       </View>
@@ -32,21 +49,16 @@ export default function InventoryScreen() {
 }
 
 const styles = StyleSheet.create({
-
   container: {
     flex: 1,
   },
   tableContainer: {
     flex: 0.9, 
   },
-
   bottomButtonContainer: {
     position: "absolute",
     bottom: 0,
     left: "40%",
     alignItems: "center",
   },
-
-  
-
 });
