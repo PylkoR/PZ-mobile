@@ -73,6 +73,7 @@ const styles = StyleSheet.create({
     height: 40,
     width: "20%",
     backgroundColor: "#fff",
+    textAlign:"center",
   },
 
   tableContainer: {
