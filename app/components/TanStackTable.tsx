@@ -138,12 +138,17 @@ const TableComponent: React.FC<TableProps> = ({ data }) => {
                         label="Sortuj ↓"
                     />
                 )}
-                {selectedColumn.getCanFilter() && currentFilterValue !== '' && (
-                    <CustomButton
-                        onPress={() => selectedColumn.setFilterValue('')}
-                        label="Wyczyść Filtr"
-                     />
-                )}
+                <CustomButton
+                  onPress={() => {
+                    if (selectedColumn?.getCanFilter()) {
+                      selectedColumn.setFilterValue(''); 
+                    }
+                    if (selectedColumn?.getCanSort()) {
+                      selectedColumn.clearSorting(); 
+                    }
+                  }}
+                  label="Wyczyść"
+                />
                 <CustomButton
                     onPress={() => setSelectedColumn(null)}
                     label="Gotowe"
@@ -166,7 +171,7 @@ const TableComponent: React.FC<TableProps> = ({ data }) => {
           onScroll={handleContentScroll}
           scrollEventThrottle={16}
           >
-            <View style={styles.tableBodyContainer}>
+            <View>
                 {table.getRowModel().rows.map((row) => (
                     <View style={styles.bodyRow} key={row.id}>
                         {row.getVisibleCells().map((cell) => {
@@ -193,32 +198,59 @@ const TableComponent: React.FC<TableProps> = ({ data }) => {
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1, backgroundColor: 'white', margin: 5, borderWidth: 1, borderColor: 'black', overflow: 'hidden',
+        flex: 1, 
+        backgroundColor: 'white', 
+        margin: 5, 
+        borderWidth: 1, 
+        borderColor: 'black', 
+        overflow: 'hidden',
     },
     externalFilterArea: {
-        padding: 10, borderBottomWidth: 1, borderColor: '#ccc', backgroundColor: '#f8f9fa', 
+        padding: 10, 
+        borderBottomWidth: 1, 
+        borderColor: '#ccc', 
+        backgroundColor: '#f8f9fa', 
     },
     filterAreaLabel: {
-        fontWeight: '500', fontSize: 14, color: '#495057', marginBottom: 5,
+        fontWeight: '500', 
+        fontSize: 14, 
+        color: '#495057', 
+        marginBottom: 5,
     },
     externalFilterInput: {
-        height: 38, backgroundColor: 'white', borderColor: '#adb5bd', borderWidth: 1, borderRadius: 4, paddingHorizontal: 8, fontSize: 14, marginBottom: 10, 
+        height: 38, 
+        backgroundColor: 'white', 
+        borderColor: '#adb5bd', 
+        borderWidth: 1, 
+        borderRadius: 4, 
+        paddingHorizontal: 8, 
+        fontSize: 14, 
+        marginBottom: 10, 
     },
     actionButtonsContainer: {
-        flexDirection: 'row',
+        
         flexWrap: 'wrap',
         alignItems: 'center', 
         justifyContent: 'center',
-        gap: 8, 
+        gap: 4, 
     },
    
     fixedHeaderContainer: {
-        borderBottomWidth: 2, borderColor: 'black', backgroundColor: '#e9ecef',
+        borderBottomWidth: 2, 
+        borderColor: 'black', 
+        backgroundColor: '#e9ecef',
     },
-    headerScrollContent: { flexDirection: 'row' },
-    headerRowContent: { flexDirection: 'row' },
+    headerScrollContent: { 
+      flexDirection: 'row' },
+    headerRowContent: { 
+      flexDirection: 'row' },
     headerCell: {
-        paddingVertical: 12, paddingHorizontal: 8, borderRightWidth: 1, borderColor: '#dee2e6', alignItems: 'center', justifyContent: 'center',
+        paddingVertical: 12, 
+        paddingHorizontal: 8, 
+        borderRightWidth: 1, 
+        borderColor: '#dee2e6', 
+        alignItems: 'center', 
+        justifyContent: 'center',
     },
     headerCellSelected: {
         backgroundColor: '#D0DDD0',
@@ -228,12 +260,18 @@ const styles = StyleSheet.create({
     },
     verticalScrollContainer: { flex: 1 },
     horizontalScrollContainer: {},
-    tableBodyContainer: {},
     bodyRow: {
-        flexDirection: 'row', borderBottomWidth: 1, borderColor: '#e9ecef',
+        flexDirection: 'row', 
+        borderBottomWidth: 1, 
+        borderColor: '#e9ecef',
     },
     bodyCell: {
-        paddingHorizontal: 8, paddingVertical: 10, borderRightWidth: 1, borderColor: '#e9ecef', justifyContent: 'center', alignItems: 'flex-start',
+        paddingHorizontal: 8, 
+        paddingVertical: 10, 
+        borderRightWidth: 1, 
+        borderColor: '#e9ecef', 
+        justifyContent: 'center', 
+        alignItems: 'flex-start',
     },
     bodyText: {
         color: '#495057',

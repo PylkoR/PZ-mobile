@@ -13,6 +13,8 @@ export default function DrawerLayout() {
             width: 250,
           },
           
+          swipeEdgeWidth: 0,
+
           drawerActiveBackgroundColor:'#9aa6a6',
 
           drawerActiveTintColor: 'FFFFFF', 

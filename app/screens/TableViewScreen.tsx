@@ -1,15 +1,40 @@
-import { Text } from "react-native";
+import { StyleSheet,View } from "react-native";
 import ScreenWrapper from "./ScreenWrapper";
-import CustomButton from "../components/CustomButton";
-import { router } from "expo-router";
-
+import TanStackTable from "../components/TanStackTable";
+import { useState,useEffect } from "react";
+import inventoryData from "../inventoryData.json";
 export default function TableViewScreen() {
+
+  
+    const [data, setData] = useState<any[]>([]);
+  
+    useEffect(() => {
+      setData(inventoryData);
+    }, []);
+  
+
   return (
     <ScreenWrapper>
-      <Text>Welcome to the Table View Screen!</Text>
-      <CustomButton label={"Działam"} onPress={() => router.push("/")}/>
       
+      <View style={styles.container}>
+        <View style={styles.tableContainer}>
+            <TanStackTable data={data} />
+        </View>
+
+        
+      </View>
       
     </ScreenWrapper>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  tableContainer: {
+    flex: 0.9, 
+  },
+});
