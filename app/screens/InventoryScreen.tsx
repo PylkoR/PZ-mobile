@@ -1,4 +1,4 @@
-import { StyleSheet, View, Alert } from "react-native";
+import { StyleSheet, View, Alert, TextInput} from "react-native";
 import ScreenWrapper from "./ScreenWrapper";
 import CustomButton from "../components/CustomButton";
 import inventoryData from "../inventoryData.json";
@@ -33,6 +33,17 @@ export default function InventoryScreen() {
   return (
     <ScreenWrapper>
       <View style={styles.container}>
+        <View style={styles.roomInputContainer}>
+          <TextInput
+              placeholder="Pokój"
+              style={styles.roomInput}
+              onChangeText={(text) => console.log(text)}
+          />
+          <CustomButton
+            label="Rozpocznij"
+          />
+        </View>
+        
         <View style={styles.tableContainer}>
             <TanStackTable data={data} />
         </View>
@@ -52,6 +63,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  roomInputContainer: {
+    flexDirection: "row",
+    margin:20,
+    justifyContent: "center",
+    gap: 40,
+  },
+  roomInput: {
+    height: 40,
+    width: "20%",
+    backgroundColor: "#fff",
+    textAlign:"center",
+  },
+
   tableContainer: {
     flex: 0.9, 
   },
