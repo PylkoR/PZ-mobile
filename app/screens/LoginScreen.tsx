@@ -11,6 +11,7 @@ export default function LoginScreen() {
         <Text>Tutaj API USOS</Text>
         <View style={styles.buttonWrapper}>
             <CustomButton label="Zaloguj" onPress={() => router.push("../files")}/>
+            <CustomButton label="Test" onPress={() => router.push("../test")}/> 
         </View>
       </View>
     </ScreenWrapper>
