@@ -3,17 +3,39 @@ import ScreenWrapper from "./ScreenWrapper";
 import CustomButton from "../components/CustomButton";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { WebView } from 'react-native-webview';
+import { WebView,WebViewNavigation } from 'react-native-webview';
 
 const DJANGO_URL = 'http://192.168.1.72:8000/oauth/login'
 
+const DJANGO_SUCCESS_INDICATOR_URL_PART = '/dashboard/'; //tymczasowy sposób weryfikacji logowania
+
 
 export default function HomeScreen() {
-  const router = useRouter(); // testowy button do redirectu na strony z menu
+  const router = useRouter(); 
   const [showUsosLoginModal, setShowUsosLoginModal] = useState(false); // Stan do kontrolowania modala
+  const [webViewLoading, setWebViewLoading] = useState(false);
+
 
   const handleOpenUsosLogin = () => {
     setShowUsosLoginModal(true); // Pokaż modal
+  };
+
+  const handleCloseUsosLogin = () => {
+    setShowUsosLoginModal(false);
+    setWebViewLoading(false); 
+  }
+
+  const onNavigationStateChange = (navState: WebViewNavigation) => {
+    console.log("WebView Navigating to: ", navState.url);
+    setWebViewLoading(navState.loading); 
+
+    if (navState.url && navState.url.includes(DJANGO_SUCCESS_INDICATOR_URL_PART)) {
+      console.log("Wykryto URL sukcesu (dashboard), zamykanie modala i nawigacja do /files");
+      setShowUsosLoginModal(false); // Zamknij modal
+      setWebViewLoading(false); // Zakończ ładowanie
+      router.replace('/files');   // Przejdź do ekranu FilesListScreen (lub innej docelowej ścieżki)
+                                  // Używamy replace, aby użytkownik nie mógł wrócić do WebView przyciskiem "wstecz"
+    }
   };
 
   return (
@@ -32,19 +54,14 @@ export default function HomeScreen() {
         
       >
        
-        <View style={{ flex: 1 }}> {/* Zwykły View jako kontener dla WebView i przycisku Zamknij */}
+        <View style={{ flex: 1 ,paddingTop: 20 }}> 
           <WebView
             source={{ uri: DJANGO_URL }}
             style={{ flex: 1 }}
-            startInLoadingState={true} // Opcjonalnie: pokazuje wskaźnik ładowania
-            // onError={(syntheticEvent) => {
-            //   const { nativeEvent } = syntheticEvent;
-            //   console.warn('WebView error: ', nativeEvent);
-            //   setShowUsosLoginModal(false);
-            //   alert(`Błąd ładowania strony logowania: ${nativeEvent.description || nativeEvent.code}`);
-            // }}
+            onNavigationStateChange={onNavigationStateChange}
+            startInLoadingState={true} 
           />
-          <Button title="Zamknij" onPress={() => setShowUsosLoginModal(false)} />
+          <Button title="Zamknij" onPress={handleCloseUsosLogin} />
         </View>
       </Modal>
     </ScreenWrapper>
