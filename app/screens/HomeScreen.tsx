@@ -5,9 +5,9 @@ import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { WebView,WebViewNavigation } from 'react-native-webview';
 
-const DJANGO_URL = 'http://192.168.0.180:8000/oauth/login'
+const DJANGO_URL = 'http://10.72.147.211:8000/oauth/login'
 
-const DJANGO_SUCCESS_INDICATOR_URL_PART = 'http://localhost:3000/'; //tymczasowy sposób weryfikacji logowania
+const DJANGO_SUCCESS_INDICATOR_URL_PART = 'http://10.72.147.211:8000/oauth/callback/'; //zmien na twoje ip
 
 
 export default function HomeScreen() {
