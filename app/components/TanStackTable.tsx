@@ -1,12 +1,34 @@
-
-import CustomButton from './CustomButton'; // <--- DODANO IMPORT
-
+import CustomButton from './CustomButton';
 import React, { useState, useMemo, useRef, useCallback } from 'react';
-import {Text, View, StyleSheet, ScrollView, TextInput, TouchableOpacity} from 'react-native';
-import {createColumnHelper,flexRender,getCoreRowModel,getFilteredRowModel,getSortedRowModel, useReactTable,Column,SortingState} from '@tanstack/react-table';
+import { Text, View, StyleSheet, ScrollView, TextInput, TouchableOpacity } from 'react-native';
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getSortedRowModel,
+  useReactTable,
+  Column,
+  SortingState,
+  ColumnDef,
+} from '@tanstack/react-table';
 
-type DataItem = {
-    id: number; inventory: number; department: number; asset_group: number; category: string; inventory_number: string; asset_component: number; sub_number: number; acquisition_date: string; asset_description: string; quantity: number; initial_value: string; room: string; new_room: string; scanned: boolean;
+export type DataItem = {
+  id: number;
+  inventory: number;
+  department: number;
+  asset_group: number;
+  category: string;
+  inventory_number: string;
+  asset_component: string | number;
+  sub_number: number;
+  acquisition_date: string;
+  asset_description: string;
+  quantity: number;
+  initial_value: string | number;
+  currentRoom: string;
+  lastInventoryRoom: string;
+  scanned: boolean;
 };
 
 interface TableProps {
@@ -14,25 +36,119 @@ interface TableProps {
 }
 
 const TableComponent: React.FC<TableProps> = ({ data }) => {
-
   const [columnFilters, setColumnFilters] = useState<any[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [selectedColumn, setSelectedColumn] = useState<Column<any, any> | null>(null);
+  const [selectedColumn, setSelectedColumn] = useState<Column<DataItem, unknown> | null>(null);
 
   const headerScrollRef = useRef<ScrollView>(null);
   const contentScrollRef = useRef<ScrollView>(null);
 
   const columnHelper = createColumnHelper<DataItem>();
-  const columns = useMemo(
+
+  const columns = useMemo<ColumnDef<DataItem, any>[]>(
     () => [
-        columnHelper.accessor('inventory', { header: 'Inventory', cell: info => info.getValue(), enableColumnFilter: true, enableSorting: true, size: 120 }),
-        columnHelper.accessor('category', { header: 'Category', cell: info => info.getValue(), enableColumnFilter: true, enableSorting: true, size: 150 }),
-        columnHelper.accessor('inventory_number', { header: 'Inv Number', cell: info => info.getValue(), enableColumnFilter: true, enableSorting: true, size: 150 }),
-        columnHelper.accessor('asset_description', { header: 'Description', cell: info => info.getValue(), enableColumnFilter: true, enableSorting: true, size: 250 }),
-        columnHelper.accessor('quantity', { header: 'Qty', cell: info => info.getValue(), size: 80, enableSorting: true }),
-        columnHelper.accessor('initial_value', { header: 'Value', cell: info => info.getValue(), size: 100, enableSorting: true }),
-        columnHelper.accessor('room', { header: 'Room', cell: info => info.getValue(), enableColumnFilter: true, enableSorting: true, size: 100 }),
-        columnHelper.accessor('scanned', { header: 'Scanned', cell: info => info.getValue() ? 'Yes' : 'No', size: 90, enableSorting: true }),
+      columnHelper.accessor('id', {
+        header: 'ID',
+        cell: info => info.getValue(),
+        enableColumnFilter: true,
+        enableSorting: true,
+        size: 70
+      }),
+      columnHelper.accessor('inventory', {
+        header: 'Inwentarz ID',
+        cell: info => info.getValue(),
+        enableColumnFilter: true,
+        enableSorting: true,
+        size: 120
+      }),
+      columnHelper.accessor('department', {
+        header: 'Dział',
+        cell: info => info.getValue(),
+        enableColumnFilter: true,
+        enableSorting: true,
+        size: 100
+      }),
+      columnHelper.accessor('asset_group', {
+        header: 'Grupa Aktywów',
+        cell: info => info.getValue(),
+        enableColumnFilter: true,
+        enableSorting: true,
+        size: 130
+      }),
+      columnHelper.accessor('category', {
+        header: 'Kategoria',
+        cell: info => info.getValue(),
+        enableColumnFilter: true,
+        enableSorting: true,
+        size: 150
+      }),
+      columnHelper.accessor('inventory_number', {
+        header: 'Numer Inwentarzowy',
+        cell: info => info.getValue(),
+        enableColumnFilter: true,
+        enableSorting: true,
+        size: 160
+      }),
+      columnHelper.accessor('asset_component', {
+        header: 'Składnik Aktywów',
+        cell: info => String(info.getValue()),
+        enableColumnFilter: true,
+        enableSorting: true,
+        size: 150
+      }),
+      columnHelper.accessor('sub_number', {
+        header: 'Podnumer',
+        cell: info => info.getValue(),
+        enableColumnFilter: true,
+        enableSorting: true,
+        size: 100
+      }),
+      columnHelper.accessor('acquisition_date', {
+        header: 'Data Nabycia',
+        cell: info => info.getValue(),
+        enableColumnFilter: true,
+        enableSorting: true,
+        size: 120
+      }),
+      columnHelper.accessor('asset_description', {
+        header: 'Opis',
+        cell: info => info.getValue(),
+        enableColumnFilter: true,
+        enableSorting: true,
+        size: 180
+      }),
+      columnHelper.accessor('quantity', {
+        header: 'Ilość',
+        cell: info => info.getValue(),
+        size: 80,
+        enableSorting: true
+      }),
+      columnHelper.accessor('initial_value', {
+        header: 'Wartość',
+        cell: info => String(info.getValue()),
+        size: 120,
+        enableSorting: true
+      }),
+      columnHelper.accessor('lastInventoryRoom', {
+        header: 'Pomieszczenie',
+        cell: info => info.getValue(),
+        enableColumnFilter: true,
+        enableSorting: true,
+        size: 180
+      }),
+      columnHelper.accessor('currentRoom', {
+        header: 'Obecne Pomieszczenie',
+        cell: info => info.getValue(),
+        enableColumnFilter: true,
+        enableSorting: true,
+        size: 180
+      }),
+      columnHelper.accessor('scanned', {
+        header: 'Zeskanowano',
+        cell: info => info.getValue() ? 'Tak' : 'Nie',
+        size: 180,
+        enableSorting: true
+      }),
     ],
     [columnHelper]
   );
@@ -48,18 +164,15 @@ const TableComponent: React.FC<TableProps> = ({ data }) => {
     getSortedRowModel: getSortedRowModel(),
   });
 
-
   const handleContentScroll = useCallback((event: any) => {
     headerScrollRef.current?.scrollTo({ x: event.nativeEvent.contentOffset.x, animated: false });
   }, []);
 
-
   const currentFilterValue = useMemo(() => {
-      if (!selectedColumn) return '';
-      const filter = columnFilters.find(f => f.id === selectedColumn.id);
-      return filter ? filter.value : '';
+    if (!selectedColumn) return '';
+    const filter = columnFilters.find(f => f.id === (selectedColumn as Column<DataItem, unknown>).id);
+    return filter ? filter.value : '';
   }, [selectedColumn, columnFilters]);
-
 
   const renderFixedHeader = () => (
     <View style={styles.fixedHeaderContainer}>
@@ -73,7 +186,7 @@ const TableComponent: React.FC<TableProps> = ({ data }) => {
         {table.getHeaderGroups().map((headerGroup) => (
           <View style={styles.headerRowContent} key={headerGroup.id}>
             {headerGroup.headers.map((header) => {
-              const column = header.column;
+              const column = header.column as Column<DataItem, unknown>;
               const columnWidth = column.getSize() ?? 150;
               const canFilter = column.getCanFilter();
               const canSort = column.getCanSort();
@@ -108,13 +221,12 @@ const TableComponent: React.FC<TableProps> = ({ data }) => {
     </View>
   );
 
-
   return (
     <View style={styles.container}>
       {selectedColumn && (
          <View style={styles.externalFilterArea}>
             <Text style={styles.filterAreaLabel}>
-                Kolumna: {selectedColumn.id}
+                Kolumna: {String(selectedColumn.id)}
             </Text>
             {selectedColumn.getCanFilter() && (
                 <TextInput
@@ -141,10 +253,10 @@ const TableComponent: React.FC<TableProps> = ({ data }) => {
                 <CustomButton
                   onPress={() => {
                     if (selectedColumn?.getCanFilter()) {
-                      selectedColumn.setFilterValue(''); 
+                      selectedColumn.setFilterValue('');
                     }
                     if (selectedColumn?.getCanSort()) {
-                      selectedColumn.clearSorting(); 
+                      selectedColumn.clearSorting();
                     }
                   }}
                   label="Wyczyść"
@@ -175,7 +287,8 @@ const TableComponent: React.FC<TableProps> = ({ data }) => {
                 {table.getRowModel().rows.map((row) => (
                     <View style={styles.bodyRow} key={row.id}>
                         {row.getVisibleCells().map((cell) => {
-                        const columnWidth = cell.column.getSize() ?? 150;
+                        const column = cell.column as Column<DataItem, unknown>;
+                        const columnWidth = column.getSize() ?? 150;
                         return (
                             <View
                                 style={[styles.bodyCell, { width: columnWidth }]}
@@ -198,58 +311,58 @@ const TableComponent: React.FC<TableProps> = ({ data }) => {
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1, 
-        backgroundColor: 'white', 
-        margin: 5, 
-        borderWidth: 1, 
-        borderColor: 'black', 
+        flex: 1,
+        backgroundColor: 'white',
+        margin: 5,
+        borderWidth: 1,
+        borderColor: 'black',
         overflow: 'hidden',
     },
     externalFilterArea: {
-        padding: 10, 
-        borderBottomWidth: 1, 
-        borderColor: '#ccc', 
-        backgroundColor: '#f8f9fa', 
+        padding: 10,
+        borderBottomWidth: 1,
+        borderColor: '#ccc',
+        backgroundColor: '#f8f9fa',
     },
     filterAreaLabel: {
-        fontWeight: '500', 
-        fontSize: 14, 
-        color: '#495057', 
+        fontWeight: '500',
+        fontSize: 14,
+        color: '#495057',
         marginBottom: 5,
     },
     externalFilterInput: {
-        height: 38, 
-        backgroundColor: 'white', 
-        borderColor: '#adb5bd', 
-        borderWidth: 1, 
-        borderRadius: 4, 
-        paddingHorizontal: 8, 
-        fontSize: 14, 
-        marginBottom: 10, 
+        height: 38,
+        backgroundColor: 'white',
+        borderColor: '#adb5bd',
+        borderWidth: 1,
+        borderRadius: 4,
+        paddingHorizontal: 8,
+        fontSize: 14,
+        marginBottom: 10,
     },
     actionButtonsContainer: {
-        
+        flexDirection: 'row',
         flexWrap: 'wrap',
-        alignItems: 'center', 
-        justifyContent: 'center',
-        gap: 4, 
+        alignItems: 'center',
+        justifyContent: 'space-around',
+        gap: 4,
     },
    
     fixedHeaderContainer: {
-        borderBottomWidth: 2, 
-        borderColor: 'black', 
+        borderBottomWidth: 2,
+        borderColor: 'black',
         backgroundColor: '#e9ecef',
     },
-    headerScrollContent: { 
+    headerScrollContent: {
       flexDirection: 'row' },
-    headerRowContent: { 
+    headerRowContent: {
       flexDirection: 'row' },
     headerCell: {
-        paddingVertical: 12, 
-        paddingHorizontal: 8, 
-        borderRightWidth: 1, 
-        borderColor: '#dee2e6', 
-        alignItems: 'center', 
+        paddingVertical: 12,
+        paddingHorizontal: 8,
+        borderRightWidth: 1,
+        borderColor: '#dee2e6',
+        alignItems: 'center',
         justifyContent: 'center',
     },
     headerCellSelected: {
@@ -261,16 +374,16 @@ const styles = StyleSheet.create({
     verticalScrollContainer: { flex: 1 },
     horizontalScrollContainer: {},
     bodyRow: {
-        flexDirection: 'row', 
-        borderBottomWidth: 1, 
+        flexDirection: 'row',
+        borderBottomWidth: 1,
         borderColor: '#e9ecef',
     },
     bodyCell: {
-        paddingHorizontal: 8, 
-        paddingVertical: 10, 
-        borderRightWidth: 1, 
-        borderColor: '#e9ecef', 
-        justifyContent: 'center', 
+        paddingHorizontal: 8,
+        paddingVertical: 10,
+        borderRightWidth: 1,
+        borderColor: '#e9ecef',
+        justifyContent: 'center',
         alignItems: 'flex-start',
     },
     bodyText: {

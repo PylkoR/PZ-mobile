@@ -1,16 +1,30 @@
 import React from "react";
-import CustomButton from "./CustomButton";
-import FileButton from "./FileButton"; // Import the new FileButton component
+import FileButton from "./FileButton";
 import { View, StyleSheet, FlatList } from "react-native";
 import { useRouter } from "expo-router";
 
-const FilesList = ({ files }: { files: { id: string; name: string }[] }) => {
+interface FileItem {
+  id: string;
+  name: string;
+}
+
+interface FilesListProps {
+  files: FileItem[];
+}
+
+const FilesList: React.FC<FilesListProps> = ({ files }) => {
   const router = useRouter();
 
-  const renderItem = ({ item }: { item: { id: string; name: string } }) => (
+  const renderItem = ({ item }: { item: FileItem }) => (
     <FileButton
       label={item.name}
-      onPress={() => router.push("../drawer/inventory")}
+      onPress={() => {
+        console.log(`Navigating to inventory with ID: ${item.id}`);
+        router.push({
+          pathname: "../drawer/inventory",
+          params: { inventoryId: item.id },
+        });
+      }}
     />
   );
 
@@ -20,7 +34,7 @@ const FilesList = ({ files }: { files: { id: string; name: string }[] }) => {
         <FlatList
           data={files}
           renderItem={renderItem}
-          keyExtractor={item => item.id}
+          keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
         />
       </View>
@@ -33,7 +47,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 80, // Adjust to avoid overlap with the logout button
+    marginTop: 80,
   },
   list: {
     paddingVertical: 20,
@@ -42,7 +56,7 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     backgroundColor: 'white',
-    borderRadius: 20, // Round all corners
+    borderRadius: 20,
     padding: 10,
   },
 });
