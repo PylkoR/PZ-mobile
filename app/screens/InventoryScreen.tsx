@@ -9,23 +9,38 @@ import {
 import ScreenWrapper from "./ScreenWrapper";
 import CustomButton from "../components/CustomButton";
 import { useState, useEffect, useCallback } from "react";
-import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import TanStackTable from "../components/TanStackTable";
 import { DataItem } from "../components/TanStackTable";
 
-const YOUR_BACKEND_IP = '10.72.147.211';
+const YOUR_BACKEND_IP = '192.168.210.189';
 const BASE_BACKEND_URL = `http://${YOUR_BACKEND_IP}:8000`;
 
 export default function InventoryScreen() {
   const [data, setData] = useState<DataItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [room, setRoom] = useState("");
+  const [pendingRoom, setPendingRoom] = useState("");
+  const [canScan, setCanScan] = useState(false);
   
-  const params = useLocalSearchParams<{ inventoryId?: string; scannedData?: string }>();
+  const params = useLocalSearchParams<{ inventoryId?: string, scannedData?: string, room?: string }>();
   const inventoryId = params.inventoryId;
   const scannedData = params.scannedData;
+  const roomParam = params.room;
 
   const expoRouter = useRouter();
+
+  // Ustaw pokój po powrocie ze skanera (jeśli jest w parametrach)
+  useEffect(() => {
+    if (roomParam && roomParam !== room) {
+      setRoom(roomParam);
+      setPendingRoom(roomParam);
+    }
+    if (roomParam && !canScan) {
+      setCanScan(true);
+    }
+  }, [roomParam]);
 
   const fetchInventoryItems = useCallback(async (currentInventoryId?: string) => {
     if (!currentInventoryId) {
@@ -77,32 +92,51 @@ export default function InventoryScreen() {
     }
   }, [inventoryId, fetchInventoryItems]);
 
-  useFocusEffect(
-    useCallback(() => {
-      if (scannedData) {
-        Alert.alert("Zeskanowano kod QR", `Dane: ${String(scannedData)}`, [
-          {
-            text: "OK",
-            onPress: () => expoRouter.replace({ pathname: "../drawer/inventory", params: { inventoryId } }),
-          },
-          {
-            text: "Anuluj",
-            style: "cancel",
-            onPress: () => expoRouter.replace({ pathname: "../drawer/inventory", params: { inventoryId } }),
-          },
-        ]);
-      }
-    }, [scannedData, inventoryId, expoRouter])
-  );
-
   const handleStartInventory = () => {
-    console.log("Rozpoczynanie inwentaryzacji...");
-    if (inventoryId) {
-      console.log(`Operacje dla inwentarza ID: ${inventoryId}`);
-    } else {
-      Alert.alert("Błąd", "Nie wybrano inwentarza.");
+    if (!pendingRoom.trim()) {
+      Alert.alert("Błąd", "Wpisz numer pokoju przed rozpoczęciem.");
+      return;
     }
+    setRoom(pendingRoom);
+    setCanScan(true);
   };
+
+  useEffect(() => {
+    if (!scannedData || data.length === 0) return;
+
+    const [category, assets, subNumber] = String(scannedData).split("-");
+    const found = data.find(
+      (item) =>
+        String(item.category) === String(category) &&
+        String(item.asset_component) === String(assets) &&
+        String(item.sub_number) === String(subNumber)
+    );
+
+    let alertMessage = `Pokój: ${room}\nKategoria: ${category || ''}\nSkładnik aktywów: ${assets || ''}\nPodnumer: ${subNumber || ''}`;
+    if (found) {
+      alertMessage += `\n\nRekord znaleziony w tabeli.\nOpis: ${found.asset_description || ''}`;
+    } else {
+      alertMessage += "\n\nNie znaleziono rekordu w tabeli.";
+    }
+
+    Alert.alert(
+      "Zeskanowano kod",
+      alertMessage,
+      found
+        ? [
+            { text: "Anuluj", style: "cancel", onPress: () => {
+              expoRouter.replace({ pathname: "../drawer/inventory", params: { inventoryId, room } });
+            } },
+            { text: "Zaznacz", onPress: () => {
+              expoRouter.replace({ pathname: "../drawer/inventory", params: { inventoryId, room } });
+            } },
+          ]
+        : [{ text: "OK", style: "cancel", onPress: () => {
+            expoRouter.replace({ pathname: "../drawer/inventory", params: { inventoryId, room } });
+        } }]
+    );
+  }, [scannedData, data, room]);
+
 
   if (isLoading) {
     return (
@@ -133,9 +167,26 @@ export default function InventoryScreen() {
           <TextInput
             placeholder="Pokój"
             style={styles.roomInput}
-            onSubmitEditing={handleStartInventory}
+            value={pendingRoom}
+            onChangeText={setPendingRoom}
+            editable={!room || !canScan ? true : false}
           />
-          <CustomButton label="Rozpocznij" onPress={handleStartInventory} />
+          {room && canScan ? (
+            <CustomButton
+              label="Zmień pokój"
+              onPress={() => {
+                setRoom("");
+                setPendingRoom("");
+                setCanScan(false);
+              }}
+            />
+          ) : (
+            <CustomButton
+              label="Rozpocznij"
+              onPress={handleStartInventory}
+              disabled={canScan}
+            />
+          )}
         </View>
         
         {error && <Text style={[localStyles.errorText, { marginVertical: 10, paddingHorizontal: 20 }]}>Ostrzeżenie: {error}</Text>}
@@ -154,8 +205,14 @@ export default function InventoryScreen() {
           <CustomButton
             icon="photo-camera"
             onPress={() => {
-              expoRouter.push({ pathname: "../scanner", params: { inventoryId } });
+              if (!room.trim()) {
+                Alert.alert("Proszę wybrać pokój");
+                return;
+              }
+              setCanScan(true);
+              expoRouter.push({ pathname: "../scanner", params: { inventoryId, room } });
             }}
+            disabled={!canScan}
           />
         </View>
       </View>

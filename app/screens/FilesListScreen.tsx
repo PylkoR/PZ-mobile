@@ -8,7 +8,7 @@ import React, { useState, useEffect } from "react";
 import { WebView } from 'react-native-webview'; // Importujemy WebView
 
 
-const YOUR_BACKEND_IP = '10.72.147.211'; // Użyj swojego IP
+const YOUR_BACKEND_IP = '192.168.210.189'; // Użyj swojego IP
 const DJANGO_LOGOUT_URL = `http://${YOUR_BACKEND_IP}:8000/logout/`;
 const GET_INVENTORIES_URL = `http://${YOUR_BACKEND_IP}:8000/inventories/`;
 

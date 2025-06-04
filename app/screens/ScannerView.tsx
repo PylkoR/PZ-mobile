@@ -1,20 +1,20 @@
 import { View, StyleSheet, Text, Button } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 
 export default function ScannerScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const router = useRouter();
+  const params = useLocalSearchParams<{ inventoryId?: string, room?: string }>();
+  const inventoryId = params.inventoryId;
+  const room = params.room;
 
   const handleBarcodeScanned = ({ data }: { data: string }) => {
     if (!scanned) {
       setScanned(true); // blokuj kolejne skany
-      router.replace({
-        pathname: "../drawer/inventory",
-        params: { scannedData: data },
-      });
+      router.replace({ pathname: "../drawer/inventory", params: { inventoryId, scannedData: data, room } });
     }
   };
 
