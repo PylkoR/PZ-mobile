@@ -1,28 +1,53 @@
 // app/screens/FilesListScreen.tsx
-import { Alert, Text, View, StyleSheet } from "react-native";
+import { Alert, StyleSheet, View } from "react-native";
 import ScreenWrapper from "./ScreenWrapper";
 import CustomButton from "../components/CustomButton";
-import { useRouter } from "expo-router"; // Używamy useRouter hook
 import FilesList from "../components/FilesList";
-import React, { useState } from "react"; // Dodajemy useState dla stanu
+import { useRouter } from "expo-router";
+import React, { useState, useEffect } from "react";
 import { WebView } from 'react-native-webview'; // Importujemy WebView
 
 
-const YOUR_BACKEND_IP = '192.168.1.72'; // Użyj swojego IP
+const YOUR_BACKEND_IP = '192.168.0.180'; // Użyj swojego IP
 const DJANGO_LOGOUT_URL = `http://${YOUR_BACKEND_IP}:8000/logout/`;
+const GET_INVENTORIES_URL = `http://${YOUR_BACKEND_IP}:8000/inventories/`;
 
 export default function FilesListScreen() {
   const router = useRouter(); 
+  const [files, setFiles] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false); 
 
-  const files = [
-    { id: '1', name: 'File 1' }, { id: '2', name: 'File 2' },
-    { id: '3', name: 'File 3' }, { id: '4', name: 'File 4' },
-    { id: '5', name: 'File 5' }, { id: '6', name: 'File 6' },
-    { id: '7', name: 'File 7' }, { id: '8', name: 'File 8' },
-    { id: '9', name: 'File 9' }, { id: '10', name: 'File 10' },
-    { id: '11', name: 'File 11' }, { id: '12', name: 'File 12' },
-  ];
+  useEffect(() => {
+    const fetchInventories = async () => {
+      try {
+        const response = await fetch(GET_INVENTORIES_URL, {
+          credentials: "include",
+        });
+
+        if (!response.ok) {
+          let errorMessage = `Network error: ${response.status} - ${response.statusText}`;
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.detail || JSON.stringify(errorData);
+          } catch (err) {
+            console.error("Error parsing inventory fetch response:", err);
+          }
+          throw new Error(errorMessage);
+        }
+
+        const data = await response.json();
+        setFiles(data.reverse());
+      } catch (err) {
+        console.error("Error fetching inventories:", err);
+        setFiles([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInventories();
+  }, []);
 
   const performLogoutOnBackend = () => {
     console.log("Rozpoczęcie wylogowywania backendu, ustawienie isLoggingOut na true");
@@ -46,7 +71,6 @@ export default function FilesListScreen() {
     );
   };
 
-
   const onLogoutWebViewLoadOrError = (event?: any) => {
     if (event && event.nativeEvent && event.nativeEvent.title === "Error page") { // Prosty sposób na wykrycie błędu strony
         console.warn("Ukryte WebView napotkało błąd strony podczas wylogowywania.");
@@ -63,14 +87,22 @@ export default function FilesListScreen() {
     router.replace('/');    
   };
 
+  if (loading) {
+    return (
+      <ScreenWrapper>
+        <View style={styles.loadingContainer}>
+          <CustomButton label="Loading..." disabled />
+        </View>
+      </ScreenWrapper>
+    );
+  }
 
   return (
     <ScreenWrapper>
       <View style={styles.buttonWrapper}>
-          <CustomButton label={"Wyloguj"} onPress={handleLogout}/>
+        <CustomButton label="Logout" onPress={handleLogout} />
       </View>
-
-      <FilesList files={files} />
+      <FilesList files={files.map(file => ({ id: file.id.toString(), name: file.name }))} />
 
       {isLoggingOut && (
         <View style={styles.hiddenWebViewContainer} pointerEvents="none">
@@ -88,18 +120,23 @@ export default function FilesListScreen() {
 }
 
 const styles = StyleSheet.create({
-    buttonWrapper: {
-      position: "absolute",
-      top: 30,
-      right: 40,
-      zIndex: 10, // Upewnij się, że jest na wierzchu
-    },
-    hiddenWebViewContainer: {
-      position: 'absolute',
-      top: -1000, // Przesuń daleko poza ekran, aby na pewno nie było widoczne
-      left: -1000, // Przesuń daleko poza ekran
-      width: 1,
-      height: 1,
-      opacity: 0, // Opcjonalnie, dla pewności
-    }
+  buttonWrapper: {
+    position: "absolute",
+    top: 30,
+    right: 40,
+    zIndex: 10, // Upewnij się, że jest na wierzchu
+  },
+  hiddenWebViewContainer: {
+    position: 'absolute',
+    top: -1000, // Przesuń daleko poza ekran, aby na pewno nie było widoczne
+    left: -1000, // Przesuń daleko poza ekran
+    width: 1,
+    height: 1,
+    opacity: 0, // Opcjonalnie, dla pewności
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 });
