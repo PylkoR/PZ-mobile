@@ -6,9 +6,10 @@ import FilesList from "../components/FilesList";
 import { useRouter } from "expo-router";
 import React, { useState, useEffect } from "react";
 import { WebView } from 'react-native-webview'; // Importujemy WebView
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
-const YOUR_BACKEND_IP = '192.168.210.189'; // Użyj swojego IP
+const YOUR_BACKEND_IP = '192.168.0.180'; // Użyj swojego IP
 const DJANGO_LOGOUT_URL = `http://${YOUR_BACKEND_IP}:8000/logout/`;
 const GET_INVENTORIES_URL = `http://${YOUR_BACKEND_IP}:8000/inventories/`;
 
@@ -21,8 +22,11 @@ export default function FilesListScreen() {
   useEffect(() => {
     const fetchInventories = async () => {
       try {
+        const authToken = await AsyncStorage.getItem('authToken');
         const response = await fetch(GET_INVENTORIES_URL, {
-          credentials: "include",
+          headers: {
+            ...(authToken ? { 'Authorization': `Token ${authToken}` } : {}),
+          },
         });
 
         if (!response.ok) {

@@ -12,8 +12,9 @@ import { useState, useEffect, useCallback } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import TanStackTable from "../components/TanStackTable";
 import { DataItem } from "../components/TanStackTable";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const YOUR_BACKEND_IP = '192.168.210.189';
+const YOUR_BACKEND_IP = '192.168.0.180';
 const BASE_BACKEND_URL = `http://${YOUR_BACKEND_IP}:8000`;
 
 export default function InventoryScreen() {
@@ -56,8 +57,11 @@ export default function InventoryScreen() {
     console.log("Fetching inventory items from URL:", itemsUrl);
 
     try {
+      const authToken = await AsyncStorage.getItem('authToken');
       const response = await fetch(itemsUrl, {
-        credentials: "include",
+        headers: {
+          ...(authToken ? { 'Authorization': `Token ${authToken}` } : {}),
+        },
       });
 
       if (!response.ok) {
@@ -127,8 +131,36 @@ export default function InventoryScreen() {
             { text: "Anuluj", style: "cancel", onPress: () => {
               expoRouter.replace({ pathname: "../drawer/inventory", params: { inventoryId, room } });
             } },
-            { text: "Zaznacz", onPress: () => {
-              expoRouter.replace({ pathname: "../drawer/inventory", params: { inventoryId, room } });
+            { text: "Zaznacz", onPress: async () => {
+                if (!found) return;
+                try {
+                  const patchUrl = `${BASE_BACKEND_URL}/items/${found.id}/`;
+                  const patchBody = JSON.stringify({ scanned: true, currentRoom: room });
+                  const authToken = await AsyncStorage.getItem('authToken');
+                  const patchResp = await fetch(patchUrl, {
+                    method: "PATCH",
+                    headers: {
+                      "Content-Type": "application/json",
+                      ...(authToken ? { 'Authorization': `Token ${authToken}` } : {}),
+                    },
+                    body: patchBody,
+                  });
+                  if (!patchResp.ok) {
+                    let errorMsg = `Błąd aktualizacji: ${patchResp.status}`;
+                    try {
+                      const errData = await patchResp.json();
+                      errorMsg = errData.detail || errData.message || JSON.stringify(errData) || errorMsg;
+                    } catch {}
+                    Alert.alert("Błąd", errorMsg);
+                  } else {
+                    // Odśwież dane po udanej aktualizacji
+                    await fetchInventoryItems(inventoryId);
+                  }
+                } catch (e: any) {
+                  Alert.alert("Błąd", e.message || "Nie udało się zaktualizować rekordu.");
+                } finally {
+                  expoRouter.replace({ pathname: "../drawer/inventory", params: { inventoryId, room } });
+                }
             } },
           ]
         : [{ text: "OK", style: "cancel", onPress: () => {
