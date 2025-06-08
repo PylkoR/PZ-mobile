@@ -9,7 +9,7 @@ import { WebView } from 'react-native-webview'; // Importujemy WebView
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
-const YOUR_BACKEND_IP = '192.168.0.180'; // Użyj swojego IP
+const YOUR_BACKEND_IP = '192.168.1.72'; // Użyj swojego IP
 const DJANGO_LOGOUT_URL = `http://${YOUR_BACKEND_IP}:8000/logout/`;
 const GET_INVENTORIES_URL = `http://${YOUR_BACKEND_IP}:8000/inventories/`;
 
@@ -95,7 +95,7 @@ export default function FilesListScreen() {
     return (
       <ScreenWrapper>
         <View style={styles.loadingContainer}>
-          <CustomButton label="Loading..." disabled />
+          <CustomButton label="Ładowanie..." disabled />
         </View>
       </ScreenWrapper>
     );
@@ -104,7 +104,7 @@ export default function FilesListScreen() {
   return (
     <ScreenWrapper>
       <View style={styles.buttonWrapper}>
-        <CustomButton label="Logout" onPress={handleLogout} />
+        <CustomButton label="Wyloguj" onPress={handleLogout} />
       </View>
       <FilesList files={files.map(file => ({ id: file.id.toString(), name: file.name }))} />
 

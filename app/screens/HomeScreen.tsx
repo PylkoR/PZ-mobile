@@ -1,4 +1,4 @@
-import { Alert, Button, Modal, Text, View, StyleSheet } from "react-native";
+import { Alert, Button, Modal, Text, View, StyleSheet, ActivityIndicator } from "react-native";
 import ScreenWrapper from "./ScreenWrapper";
 import CustomButton from "../components/CustomButton";
 import { useRouter } from "expo-router";
@@ -6,16 +6,20 @@ import React, { useState } from "react";
 import { WebView } from 'react-native-webview';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const DJANGO_URL = 'http://192.168.0.180:8000/oauth/login/?source=mobile';
-const DJANGO_SUCCESS_INDICATOR_URL_PART = 'http://192.168.0.180:8000/oauth/callback/'; // zmień na swoje IP
+const DJANGO_URL = 'http://192.168.1.72:8000/oauth/login/?source=mobile';
+const DJANGO_SUCCESS_INDICATOR_URL_PART = 'http://192.168.1.72:8000/oauth/callback/';
 
 export default function HomeScreen() {
   const router = useRouter(); 
   const [showUsosLoginModal, setShowUsosLoginModal] = useState(false);
   const [webViewLoading, setWebViewLoading] = useState(false);
-  const [authToken, setAuthToken] = useState<string | null>(null);
+  
+  // ZMIANA 1: Nowy stan do zarządzania widocznością WebView
+  const [isHidingWebView, setIsHidingWebView] = useState(false);
 
   const handleOpenUsosLogin = () => {
+    // ZMIANA 2: Resetujemy stan ukrywania przy każdym otwarciu modala
+    setIsHidingWebView(false);
     setShowUsosLoginModal(true);
   };
 
@@ -23,70 +27,30 @@ export default function HomeScreen() {
     setShowUsosLoginModal(false);
     setWebViewLoading(false); 
   };
-
-  // Wstrzykuj JS do WebView, aby przechwycić odpowiedź JSON
+  
   const injectedJS = `
     (function() {
-      function sendToRN(msg) {
-        if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
-          window.ReactNativeWebView.postMessage(msg);
-        }
-      }
-      // Log do konsoli WebView
-      console.log('InjectedJS działa!');
-      // Wysyłaj body od razu po załadowaniu strony
-      function trySendBody() {
-        try {
-          var bodyText = document.body && document.body.innerText;
-          sendToRN(bodyText);
-        } catch (e) { sendToRN('ERROR: ' + e.message); }
-      }
-      window.onload = trySendBody;
-      setTimeout(trySendBody, 100); // szybciej!
-      // Fallback: wyślij URL
+      // ... (treść injectedJS pozostaje bez zmian)
+      function sendToRN(msg) { if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) { window.ReactNativeWebView.postMessage(msg); } }
+      function trySendBody() { try { var bodyText = document.body && document.body.innerText; sendToRN(bodyText); } catch (e) { sendToRN('ERROR: ' + e.message); } }
+      window.onload = trySendBody; setTimeout(trySendBody, 100);
       sendToRN(window.location.href);
-
-      // Przechwyć XHR
-      var origOpen = XMLHttpRequest.prototype.open;
-      XMLHttpRequest.prototype.open = function() {
-        this.addEventListener('load', function() {
-          if (this.responseType === '' || this.responseType === 'text') {
-            try {
-              var json = JSON.parse(this.responseText);
-              sendToRN(JSON.stringify(json));
-            } catch (e) {}
-          }
-        });
-        origOpen.apply(this, arguments);
-      };
-      // Przechwyć fetch
-      var origFetch = window.fetch;
-      window.fetch = function() {
-        return origFetch.apply(this, arguments).then(function(response) {
-          if (response.headers.get('content-type') && response.headers.get('content-type').includes('application/json')) {
-            response.clone().json().then(function(json) {
-              sendToRN(JSON.stringify(json));
-            });
-          }
-          return response;
-        });
-      };
     })();
   `;
 
   const handleWebViewMessage = async (event: any) => {
     const raw = event.nativeEvent.data;
     console.log('handleWebViewMessage fired:', raw);
-
-    // Poprawiony regex!
+    
     const jsonMatch = raw.match(/{[\s\S]*}/);
     if (jsonMatch) {
       try {
         const data = JSON.parse(jsonMatch[0]);
         if (data && data.token) {
-          setAuthToken(data.token);
           await AsyncStorage.setItem('authToken', data.token);
-          console.log("Znaleziono token z JSON");
+          console.log("Znaleziono token z JSON. Zamykanie modala i nawigacja.");
+          
+          // Zamykamy modal i nawigujemy do plików
           setShowUsosLoginModal(false);
           router.replace('/files');
           return;
@@ -95,15 +59,20 @@ export default function HomeScreen() {
         console.log("Błąd parsowania JSON z WebView:", jsonMatch[0]);
       }
     }
-    // Jeśli nie znaleziono JSON-a lub nie ma tokena
-    console.log("Nie znaleziono poprawnego JSON-a z tokenem w odpowiedzi WebView.");
   };
 
-  // Uprość onNavigationStateChange, usuwając z niej logikę nawigacji
+  // ZMIANA 3: Dodajemy logikę ukrywania do onNavigationStateChange
   const onNavigationStateChange = (navState: any) => {
     setWebViewLoading(navState.loading);
-    console.log("WebView URL Changed:", navState.url); // Zostaw to do debugowania
-    // Usuń stąd warunek sprawdzający URL i nawigację
+    console.log("WebView URL Changed:", navState.url);
+
+    // Jeśli URL zaczyna się od adresu zwrotnego, ukryj WebView
+    if (navState.url.startsWith(DJANGO_SUCCESS_INDICATOR_URL_PART)) {
+      if (!isHidingWebView) { // Ustawiamy tylko raz, aby uniknąć niepotrzebnych re-renderów
+        console.log("Wykryto URL zwrotny, ukrywanie WebView.");
+        setIsHidingWebView(true);
+      }
+    }
   };
 
   return (
@@ -119,13 +88,20 @@ export default function HomeScreen() {
         onRequestClose={handleCloseUsosLogin}
       >
         <View style={{ flex: 1 ,paddingTop: 20 }}> 
+          {/* ZMIANA 4: Dodajemy warunkowy styl `opacity` do WebView */}
           <WebView
             source={{ uri: DJANGO_URL }}
-            style={{ flex: 1 }}
+            style={{ flex: 1, opacity: isHidingWebView ? 0 : 1 }} 
             startInLoadingState={true} 
             onMessage={handleWebViewMessage}
             onNavigationStateChange={onNavigationStateChange}
             injectedJavaScript={injectedJS}
+            // Dodajemy renderLoading, aby pokazać wskaźnik aktywności na pełnym ekranie
+            renderLoading={() => (
+              <View style={styles.loadingOverlay}>
+                <ActivityIndicator size="large" color="#007AFF" />
+              </View>
+            )}
           />
           <Button title="Zamknij" onPress={handleCloseUsosLogin} />
         </View>
@@ -137,19 +113,30 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center", // centrowanie w pionie
-    alignItems: "center", // centrowanie w poziomie
+    justifyContent: "center",
+    alignItems: "center",
   },
   buttonWrapper: {
     justifyContent: "center",
-    alignItems: "center", // wyśrodkowanie guzika w poziomie
-    marginTop: 15, // opcjonalnie odstęp od tekstu
+    alignItems: "center",
+    marginTop: 15,
     transform: [{ scale: 1 }],
   },
   text: {
     width: "80%",
-    fontSize: 24,  // zwiększona czcionka
-    color: "#fff", // kolor biały
-    textAlign: "center", // wyśrodkowanie tekstu
+    fontSize: 24,
+    color: "#fff",
+    textAlign: "center",
+  },
+  // ZMIANA 5: Nowy styl dla nakładki ładowania
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'white', // Tło, aby zakryć ewentualne mignięcia
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

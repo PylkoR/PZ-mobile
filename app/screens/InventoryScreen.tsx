@@ -11,15 +11,22 @@ import CustomButton from "../components/CustomButton";
 import { useState, useEffect, useCallback } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import TanStackTable from "../components/TanStackTable";
-import { DataItem } from "../components/TanStackTable";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useInventory } from "../context/InventoryContext"; 
 
-const YOUR_BACKEND_IP = '192.168.0.180';
+const YOUR_BACKEND_IP = '192.168.1.72';
 const BASE_BACKEND_URL = `http://${YOUR_BACKEND_IP}:8000`;
 
 export default function InventoryScreen() {
-  const [data, setData] = useState<DataItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { 
+    inventoryData, 
+    setInventoryData, 
+    isLoading, 
+    setIsLoading,
+    currentInventoryId,
+    setCurrentInventoryId 
+  } = useInventory();
+
   const [error, setError] = useState<string | null>(null);
   const [room, setRoom] = useState("");
   const [pendingRoom, setPendingRoom] = useState("");
@@ -32,7 +39,6 @@ export default function InventoryScreen() {
 
   const expoRouter = useRouter();
 
-  // Ustaw pokój po powrocie ze skanera (jeśli jest w parametrach)
   useEffect(() => {
     if (roomParam && roomParam !== room) {
       setRoom(roomParam);
@@ -43,18 +49,26 @@ export default function InventoryScreen() {
     }
   }, [roomParam]);
 
-  const fetchInventoryItems = useCallback(async (currentInventoryId?: string) => {
-    if (!currentInventoryId) {
+  // ZMIANA 1: Dodajemy drugi argument `forceRefresh`
+  const fetchInventoryItems = useCallback(async (idToFetch?: string, forceRefresh = false) => {
+    if (!idToFetch) {
       setError("Nie wybrano inwentarza do wyświetlenia.");
       setIsLoading(false);
-      setData([]);
+      setInventoryData([]);
+      return;
+    }
+
+    // ZMIANA 2: Modyfikujemy warunek, aby sprawdzał `forceRefresh`
+    if (!forceRefresh && idToFetch === currentInventoryId && inventoryData.length > 0) {
+      setIsLoading(false);
       return;
     }
 
     setIsLoading(true);
+    setCurrentInventoryId(idToFetch);
     setError(null);
-    const itemsUrl = `${BASE_BACKEND_URL}/items/?inventory_id=${currentInventoryId}`;
-    console.log("Fetching inventory items from URL:", itemsUrl);
+    const itemsUrl = `${BASE_BACKEND_URL}/items/?inventory_id=${idToFetch}`;
+    console.log(`Fetching inventory items (forceRefresh: ${forceRefresh}) from URL:`, itemsUrl);
 
     try {
       const authToken = await AsyncStorage.getItem('authToken');
@@ -72,26 +86,25 @@ export default function InventoryScreen() {
         } catch (e) { }
         throw new Error(errorDetail);
       }
-      const fetchedData: DataItem[] = await response.json();
-      if (fetchedData && fetchedData.length > 0) {
-      }
-      setData(fetchedData);
+      const fetchedData = await response.json();
+      setInventoryData(fetchedData); 
     } catch (e: any) {
       console.error("Błąd podczas pobierania przedmiotów inwentarza:", e);
       setError(e.message || "Wystąpił błąd podczas pobierania danych.");
-      setData([]);
+      setInventoryData([]); 
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [setInventoryData, setIsLoading, setCurrentInventoryId, currentInventoryId, inventoryData.length]);
 
   useEffect(() => {
     if (inventoryId) {
+      // Przy pierwszym ładowaniu nie wymuszamy odświeżenia
       fetchInventoryItems(inventoryId);
     } else {
       console.warn("InventoryScreen: Brak inventoryId przy montowaniu komponentu.");
       setError("Nie przekazano ID inwentarza.");
-      setData([]);
+      setInventoryData([]);
       setIsLoading(false);
     }
   }, [inventoryId, fetchInventoryItems]);
@@ -106,10 +119,10 @@ export default function InventoryScreen() {
   };
 
   useEffect(() => {
-    if (!scannedData || data.length === 0) return;
+    if (!scannedData || inventoryData.length === 0) return;
 
     const [category, assets, subNumber] = String(scannedData).split("-");
-    const found = data.find(
+    const found = inventoryData.find(
       (item) =>
         String(item.category) === String(category) &&
         String(item.asset_component) === String(assets) &&
@@ -153,8 +166,8 @@ export default function InventoryScreen() {
                     } catch {}
                     Alert.alert("Błąd", errorMsg);
                   } else {
-                    // Odśwież dane po udanej aktualizacji
-                    await fetchInventoryItems(inventoryId);
+                    // ZMIANA 3: Wymuszamy odświeżenie danych, przekazując `true`
+                    await fetchInventoryItems(inventoryId, true);
                   }
                 } catch (e: any) {
                   Alert.alert("Błąd", e.message || "Nie udało się zaktualizować rekordu.");
@@ -167,7 +180,7 @@ export default function InventoryScreen() {
             expoRouter.replace({ pathname: "../drawer/inventory", params: { inventoryId, room } });
         } }]
     );
-  }, [scannedData, data, room]);
+  }, [scannedData, inventoryData, room]);
 
 
   if (isLoading) {
@@ -181,7 +194,7 @@ export default function InventoryScreen() {
     );
   }
 
-  if (error && !data.length) {
+  if (error && !inventoryData.length) {
     return (
       <ScreenWrapper>
         <View style={[styles.container, localStyles.centered]}>
@@ -224,8 +237,8 @@ export default function InventoryScreen() {
         {error && <Text style={[localStyles.errorText, { marginVertical: 10, paddingHorizontal: 20 }]}>Ostrzeżenie: {error}</Text>}
 
         <View style={styles.tableContainer}>
-          {data.length > 0 ? (
-            <TanStackTable data={data} />
+          {inventoryData.length > 0 ? (
+            <TanStackTable data={inventoryData} />
           ) : (
             <View style={localStyles.centeredTableMessage}>
               {!isLoading && <Text>Brak danych do wyświetlenia.</Text>}

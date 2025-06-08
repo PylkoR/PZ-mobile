@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
         alignItems: 'center',
         justifyContent: 'space-around',
-        gap: 4,
+        gap: 1,
     },
    
     fixedHeaderContainer: {
