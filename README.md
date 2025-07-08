@@ -1,50 +1,30 @@
-# Welcome to your Expo app 👋
+# PW Asset Inventory System – Mobile Application
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## Project Description
 
-## Get started
+This is a mobile application written in **React Native using Expo**, developed as part of a **team project**.
 
-1. Install dependencies
+The project aimed to create a system to improve the **asset inventory process at Warsaw University of Technology**.  
+The application enables:
 
-   ```bash
-   npm install
-   ```
+- logging in to the system using a **USOS account**,
+- viewing tabular data fetched from the backend,  
+- editing individual records after scanning the **DataMatrix** code of a given item.
 
-2. Start the app
+The mobile frontend was developed by two team members: myself and my teammate.
 
-   ```bash
-    npx expo start
-   ```
+The original repository of the project can be found here: [(https://github.com/amdla/PZ-mobile)]
 
-In the output, you'll find options to open the app in a
+---
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## How to run the application
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+1. Install dependencies:
 
 ```bash
-npm run reset-project
+npm install
 ```
+2. Start project
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+npx expo start
